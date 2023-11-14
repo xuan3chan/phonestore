@@ -1,17 +1,22 @@
 <?php
 
+// Kết nối đến cơ sở dữ liệu thông qua file connect.php
 include '../components/connect.php';
 
+// Bắt đầu phiên làm việc
 session_start();
 
+// Lấy admin_id từ session, nếu không tồn tại thì chuyển hướng đến trang đăng nhập admin
 $admin_id = $_SESSION['admin_id'];
 
 if(!isset($admin_id)){
    header('location:admin_login.php');
 };
 
+// Xử lý khi có submit form thêm sản phẩm
 if(isset($_POST['add_product'])){
 
+   // Lấy thông tin sản phẩm từ form và làm sạch dữ liệu
    $name = $_POST['name'];
    $name = filter_var($name, FILTER_SANITIZE_STRING);
    $price = $_POST['price'];
@@ -19,6 +24,7 @@ if(isset($_POST['add_product'])){
    $details = $_POST['details'];
    $details = filter_var($details, FILTER_SANITIZE_STRING);
 
+   // Xử lý thông tin ảnh sản phẩm
    $image_01 = $_FILES['image_01']['name'];
    $image_01 = filter_var($image_01, FILTER_SANITIZE_STRING);
    $image_size_01 = $_FILES['image_01']['size'];
@@ -37,24 +43,27 @@ if(isset($_POST['add_product'])){
    $image_tmp_name_03 = $_FILES['image_03']['tmp_name'];
    $image_folder_03 = '../uploaded_img/'.$image_03;
 
+   // Kiểm tra xem tên sản phẩm đã tồn tại chưa
    $select_products = $conn->prepare("SELECT * FROM `products` WHERE name = ?");
    $select_products->execute([$name]);
 
    if($select_products->rowCount() > 0){
-      $message[] = 'product name already exist!';
+      $message[] = 'Tên sản phẩm đã tồn tại!';
    }else{
 
+      // Nếu tên sản phẩm chưa tồn tại, thêm sản phẩm mới vào cơ sở dữ liệu
       $insert_products = $conn->prepare("INSERT INTO `products`(name, details, price, image_01, image_02, image_03) VALUES(?,?,?,?,?,?)");
       $insert_products->execute([$name, $details, $price, $image_01, $image_02, $image_03]);
 
       if($insert_products){
+         // Kiểm tra kích thước ảnh và di chuyển ảnh vào thư mục uploaded_img nếu kích thước hợp lệ
          if($image_size_01 > 2000000 OR $image_size_02 > 2000000 OR $image_size_03 > 2000000){
-            $message[] = 'image size is too large!';
+            $message[] = 'Kích thước ảnh quá lớn!';
          }else{
             move_uploaded_file($image_tmp_name_01, $image_folder_01);
             move_uploaded_file($image_tmp_name_02, $image_folder_02);
             move_uploaded_file($image_tmp_name_03, $image_folder_03);
-            $message[] = 'new product added!';
+            $message[] = 'Sản phẩm mới đã được thêm!';
          }
 
       }
@@ -63,26 +72,40 @@ if(isset($_POST['add_product'])){
 
 };
 
+
+// Kiểm tra xem có yêu cầu xóa sản phẩm không
 if(isset($_GET['delete'])){
 
+   // Lấy id của sản phẩm cần xóa từ tham số GET
    $delete_id = $_GET['delete'];
+
+   // Lấy thông tin ảnh của sản phẩm để sau này xóa ảnh khi sản phẩm bị xóa
    $delete_product_image = $conn->prepare("SELECT * FROM `products` WHERE id = ?");
    $delete_product_image->execute([$delete_id]);
    $fetch_delete_image = $delete_product_image->fetch(PDO::FETCH_ASSOC);
+
+   // Xóa các ảnh của sản phẩm từ thư mục uploaded_img
    unlink('../uploaded_img/'.$fetch_delete_image['image_01']);
    unlink('../uploaded_img/'.$fetch_delete_image['image_02']);
    unlink('../uploaded_img/'.$fetch_delete_image['image_03']);
+
+   // Xóa sản phẩm từ bảng products
    $delete_product = $conn->prepare("DELETE FROM `products` WHERE id = ?");
    $delete_product->execute([$delete_id]);
+
+   // Xóa thông tin sản phẩm từ các bảng cart và wishlist nếu sản phẩm đang tồn tại trong chúng
    $delete_cart = $conn->prepare("DELETE FROM `cart` WHERE pid = ?");
    $delete_cart->execute([$delete_id]);
+
    $delete_wishlist = $conn->prepare("DELETE FROM `wishlist` WHERE pid = ?");
    $delete_wishlist->execute([$delete_id]);
+
+   // Chuyển hướng về trang danh sách sản phẩm sau khi xóa thành công
    header('location:products.php');
 }
 
-
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">

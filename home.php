@@ -151,32 +151,52 @@ include 'components/wishlist_cart.php';
    <div class="swiper-wrapper">
 
    <?php
-     $select_products = $conn->prepare("SELECT * FROM `products` LIMIT 6"); 
-     $select_products->execute();
-     if($select_products->rowCount() > 0){
-      while($fetch_product = $select_products->fetch(PDO::FETCH_ASSOC)){
-   ?>
-   <form action="" method="post" class="swiper-slide slide">
-      <input type="hidden" name="pid" value="<?= $fetch_product['id']; ?>">
-      <input type="hidden" name="name" value="<?= $fetch_product['name']; ?>">
-      <input type="hidden" name="price" value="<?= $fetch_product['price']; ?>">
-      <input type="hidden" name="image" value="<?= $fetch_product['image_01']; ?>">
-      <button class="fas fa-heart" type="submit" name="add_to_wishlist"></button>
-      <a href="quick_view.php?pid=<?= $fetch_product['id']; ?>" class="fas fa-eye"></a>
-      <img src="uploaded_img/<?= $fetch_product['image_01']; ?>" alt="">
-      <div class="name"><?= $fetch_product['name']; ?></div>
-      <div class="flex">
-         <div class="price"><span>$</span><?= $fetch_product['price']; ?><span>/-</span></div>
-         <input type="number" name="qty" class="qty" min="1" max="99" onkeypress="if(this.value.length == 2) return false;" value="1">
-      </div>
-      <input type="submit" value="add to cart" class="btn" name="add_to_cart">
-   </form>
-   <?php
-      }
-   }else{
-      echo '<p class="empty">no products added yet!</p>';
-   }
-   ?>
+// Truy vấn để lấy ra 6 sản phẩm từ bảng products
+$select_products = $conn->prepare("SELECT * FROM `products` LIMIT 6"); 
+$select_products->execute();
+
+// Kiểm tra xem có sản phẩm nào hay không
+if($select_products->rowCount() > 0){
+    // Lặp qua các sản phẩm và hiển thị thông tin của mỗi sản phẩm
+    while($fetch_product = $select_products->fetch(PDO::FETCH_ASSOC)){
+?>
+    <!-- Mỗi sản phẩm được hiển thị trong một form -->
+    <form action="" method="post" class="swiper-slide slide">
+        <!-- Các trường ẩn chứa thông tin sản phẩm -->
+        <input type="hidden" name="pid" value="<?= $fetch_product['id']; ?>">
+        <input type="hidden" name="name" value="<?= $fetch_product['name']; ?>">
+        <input type="hidden" name="price" value="<?= $fetch_product['price']; ?>">
+        <input type="hidden" name="image" value="<?= $fetch_product['image_01']; ?>">
+        
+        <!-- Nút "Add to Wishlist" -->
+        <button class="fas fa-heart" type="submit" name="add_to_wishlist"></button>
+        
+        <!-- Nút "Quick View" -->
+        <a href="quick_view.php?pid=<?= $fetch_product['id']; ?>" class="fas fa-eye"></a>
+        
+        <!-- Hiển thị ảnh sản phẩm -->
+        <img src="uploaded_img/<?= $fetch_product['image_01']; ?>" alt="">
+        
+        <!-- Hiển thị tên sản phẩm -->
+        <div class="name"><?= $fetch_product['name']; ?></div>
+        
+        <!-- Hiển thị giá và input chọn số lượng -->
+        <div class="flex">
+            <div class="price"><span>$</span><?= $fetch_product['price']; ?><span>/-</span></div>
+            <input type="number" name="qty" class="qty" min="1" max="99" onkeypress="if(this.value.length == 2) return false;" value="1">
+        </div>
+        
+        <!-- Nút "Add to Cart" -->
+        <input type="submit" value="add to cart" class="btn" name="add_to_cart">
+    </form>
+<?php
+    }
+} else {
+    // Hiển thị thông báo nếu không có sản phẩm nào
+    echo '<p class="empty">Không có sản phẩm nào được thêm!</p>';
+}
+?>
+
 
    </div>
 

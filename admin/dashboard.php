@@ -1,11 +1,15 @@
 <?php
 
+// Kết nối đến cơ sở dữ liệu
 include '../components/connect.php';
 
+// Bắt đầu phiên làm việc
 session_start();
 
+// Lấy id của admin từ phiên làm việc
 $admin_id = $_SESSION['admin_id'];
 
+// Nếu không có id của admin, chuyển hướng đến trang đăng nhập
 if(!isset($admin_id)){
    header('location:admin_login.php');
 }
